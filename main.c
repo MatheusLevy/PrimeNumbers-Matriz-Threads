@@ -13,9 +13,6 @@
 
 int matriz[n*m];
 int resto;
-int BPT;
-int inicio;
-int fim;
 int TotalPrimos = 0;
 
 
@@ -30,49 +27,57 @@ int EhPrimo(int number);
 int main(void){
 
     //int TotalElms = n*m;
-    BPT = floor(m/QThreads); //Blocos por thread
     resto = m % QThreads;
 
     PreencherMatrizPadrao(matriz);
     ExibirMatriz(matriz);
-    inicio = 0;
-    fim = n-1;
-    printf("BPT: %d", BPT);
     ProcessarMatriz();
    
     return 0;
 }
 
 void ProcessarMatriz(){
-     int i;
+    int i;
+    int inicio=0;
+    int fim=n-1;
 
-   // printf("\n------Thread 1------");
-    for(i=0;i<BPT;i++){
+
+    while (inicio<n*m)
+    {
+        while (resto>0)
+        {
+            if(resto == 1){
+                printf("\n-----Thread 1-----\n");
+                SubMatriz(inicio,fim);
+                inicio= fim+1;
+                fim += n;
+                resto--;
+            }else{
+                printf("\n-----Thread 1-----\n");
+                SubMatriz(inicio,fim);
+                inicio= fim+1;
+                fim += n;
+                resto--;
+
+                printf("\n-----Thread 2-----\n");
+                SubMatriz(inicio,fim);
+                inicio= fim+1;
+                fim += n;
+                resto--;
+            }
+        }
+        
+        printf("\n-----Thread 1-----\n");
         SubMatriz(inicio,fim);
-        inicio=fim+1;
-        fim+=n;
-    }
+        inicio= fim+1;
+        fim += n;
 
-   // printf("\n------Thread 2------");
-    for(i=0;i<BPT;i++){
-        SubMatriz(inicio,fim);
-        inicio=fim+1;
-        fim+=n;
-    }   
-
-    while(resto > 0){
-      //  printf("\n------Thread 1------");
+        printf("\n-----Thread 2-----\n");
         SubMatriz(inicio,fim);
         inicio = fim+1;
-        fim+=n;
-        resto--;
+        fim += n;
 
-        if(resto>0){
-        //    printf("\n------Thread 2------");
-            SubMatriz(inicio,fim);
-            fim+=n;
-            resto--;
-        }
+
     }
 
     printf("\nExistem %d Primos", TotalPrimos);
