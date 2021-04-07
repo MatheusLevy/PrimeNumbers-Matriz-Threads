@@ -15,20 +15,20 @@ int matriz[n*m];
 int resto;
 int TotalPrimos = 0;
 
+int inicio =0;
 
 // int posi = i*n+j;
 void PreencherMatrizPadrao();
 void ExibirMatriz();
-void SubMatriz(int inicio, int fim);
+void SubMatriz(int inicio);
 int EhPrimo(int number);
-
+void ProcessarMatriz();
 
 
 int main(void){
 
     //int TotalElms = n*m;
     resto = m % QThreads;
-
     PreencherMatrizPadrao(matriz);
     ExibirMatriz(matriz);
     ProcessarMatriz();
@@ -37,10 +37,6 @@ int main(void){
 }
 
 void ProcessarMatriz(){
-    int i;
-    int inicio=0;
-    int fim=n-1;
-
 
     while (inicio<n*m)
     {
@@ -48,34 +44,29 @@ void ProcessarMatriz(){
         {
             if(resto == 1){
                 printf("\n-----Thread 1-----\n");
-                SubMatriz(inicio,fim);
-                inicio= fim+1;
-                fim += n;
+                SubMatriz(inicio);
+                inicio = (inicio+n);
                 resto--;
             }else{
                 printf("\n-----Thread 1-----\n");
-                SubMatriz(inicio,fim);
-                inicio= fim+1;
-                fim += n;
+                SubMatriz(inicio);
+                inicio= (inicio+n);
                 resto--;
 
                 printf("\n-----Thread 2-----\n");
-                SubMatriz(inicio,fim);
-                inicio= fim+1;
-                fim += n;
+                SubMatriz(inicio);
+                inicio= inicio+n;
                 resto--;
             }
         }
         
         printf("\n-----Thread 1-----\n");
-        SubMatriz(inicio,fim);
-        inicio= fim+1;
-        fim += n;
+        SubMatriz(inicio);
+        inicio = inicio+n;
 
         printf("\n-----Thread 2-----\n");
-        SubMatriz(inicio,fim);
-        inicio = fim+1;
-        fim += n;
+        SubMatriz(inicio);
+        inicio = inicio+n;
 
 
     }
@@ -107,10 +98,10 @@ void ExibirMatriz(){
     }
 }
 
-void SubMatriz(int inicio, int fim){
+void SubMatriz(int inicio){
     int i;
     printf("\n-----Sub MAtriz ------\n");
-    for(i = inicio;i<=fim;i++){
+    for(i = inicio;i<=(inicio+n)-1;i++){
         printf("%d \t", matriz[i]);
         if(EhPrimo(matriz[i])){
             TotalPrimos++;
