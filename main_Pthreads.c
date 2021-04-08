@@ -7,8 +7,8 @@
 #define FALSE 0
 
 #define QThreads 2
-#define m 3
-#define n 3
+#define m 1000
+#define n 1000
 #define M_RAND 29999
 
 #define seed 58896532
@@ -16,9 +16,8 @@
 int matriz[n*m];
 int resto;
 int TotalPrimos = 0;
-int inicio=0;
 pthread_t threads[QThreads];
-
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 // int posi = i*n+j;
 void PreencherMatrizPadrao();
 void ExibirMatriz();
@@ -42,7 +41,7 @@ int main(void){
 
 void ProcessarMatriz(){
     int i;
-
+    int inicio=0;
     pthread_t threads_id[QThreads];
     int j;
     
@@ -55,34 +54,24 @@ void ProcessarMatriz(){
         while (resto>0)
         {
             if(resto == 1){
-                //printf("\n-----Thread 1-----\n");
                 pthread_join(threads_id[0], NULL);
-                //SubMatriz(inicio,fim);
                 inicio= (inicio+n);
                 resto--;
             }else{
-                //printf("\n-----Thread 1-----\n");
                 pthread_join(threads_id[0], NULL);
-                //SubMatriz(inicio,fim);
                 inicio= (inicio+n);
                 resto--;
 
-                //printf("\n-----Thread 2-----\n");
                 pthread_join(threads_id[1], NULL);
-                //SubMatriz(inicio,fim);
                 inicio= (inicio+n);
                 resto--;
             }
         }
         
-        //printf("\n-----Thread 1-----\n");
         pthread_join(threads_id[0], NULL);
-        //SubMatriz(inicio,fim);
         inicio= (inicio+n);
 
-        //printf("\n-----Thread 2-----\n");
         pthread_join(threads_id[1], NULL);
-        //SubMatriz(inicio,fim);
         inicio= (inicio+n);
     }
 
@@ -116,10 +105,10 @@ void ExibirMatriz(){
 //Função da Thread
 void* SubMatriz(void* inicio){
     int soma_local=0;
-
+    pthread_mutex_lock(&mutex);
     int *inicio_pt = (int*) inicio;
     int ini = *inicio_pt;
-
+    pthread_mutex_unlock(&mutex);
     int i;
     //printf("\n-----Sub MAtriz ------\n");
     for(i = ini;i<=(ini+n)-1;i++){
@@ -130,9 +119,13 @@ void* SubMatriz(void* inicio){
             
 
     }
-   //printf("\n");
+    //printf("\n");
+    
+    pthread_mutex_lock(&mutex);
     TotalPrimos+=soma_local;
-    pthread_exit(0);
+    pthread_mutex_unlock(&mutex);
+    
+    pthread_exit(NULL);
 }
 
 int EhPrimo(int number){
