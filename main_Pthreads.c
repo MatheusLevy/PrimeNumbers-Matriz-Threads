@@ -3,34 +3,38 @@
 #include <math.h>
 #include <pthread.h>
 
+//Macros
 #define TRUE 1
 #define FALSE 0
-
+//Quantidade de Threads
 #define QThreads 2
-#define m 1000
-#define n 1000
+//Matriz m x n
+#define m 5
+#define n 5
+//Maior numero aleatorio
 #define M_RAND 29999
 
+//Seed para geração aleatória
 #define seed 58896532
-
+//Definindo variaveis globais
+long long Tamanho_Matriz = n*m;
 int matriz[n*m];
-int resto;
 int TotalPrimos = 0;
+int Bloco=0;
+//Definindo Threads e Mutex
 pthread_t threads[QThreads];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-// int posi = i*n+j;
+
+//Definindo Funções
 void PreencherMatrizPadrao();
 void ExibirMatriz();
-void* SubMatriz(void* inicio);
-int EhPrimo(int number);
+void* SubMatriz(void *args);
 void ProcessarMatriz();
+int EhPrimo(int numero);
 
-
-
+//Uso de threads
 int main(void){
 
-    //int TotalElms = n*m;
-    resto = m % QThreads;
     PreencherMatrizPadrao(matriz);
     ExibirMatriz(matriz);
     ProcessarMatriz();
@@ -40,39 +44,15 @@ int main(void){
 
 
 void ProcessarMatriz(){
-    int i;
-    int inicio=0;
+
     pthread_t threads_id[QThreads];
-    int j;
-    
-    for(j=0;j<QThreads;j++)
-        pthread_create(&(threads_id[j]), NULL, (void *)SubMatriz, &inicio);
 
+    int k=0;
+    for(k=0;k<QThreads;k++)
+        pthread_create(&(threads_id[k]), NULL, SubMatriz, NULL);
 
-    while (inicio<n*m)
-    {
-        while (resto>0)
-        {
-            if(resto == 1){
-                pthread_join(threads_id[0], NULL);
-                inicio= (inicio+n);
-                resto--;
-            }else{
-                pthread_join(threads_id[0], NULL);
-                inicio= (inicio+n);
-                resto--;
-
-                pthread_join(threads_id[1], NULL);
-                inicio= (inicio+n);
-                resto--;
-            }
-        }
-        
-        pthread_join(threads_id[0], NULL);
-        inicio= (inicio+n);
-
-        pthread_join(threads_id[1], NULL);
-        inicio= (inicio+n);
+    for(k=0;k<QThreads;k++){
+        pthread_join(threads_id[k], NULL);
     }
 
     printf("\nQuantidade de Primos: %d\n", TotalPrimos);
@@ -100,27 +80,30 @@ void ExibirMatriz(){
         
         printf("\n");
     }
+    printf("\n\n");
 }
 
 //Função da Thread
-void* SubMatriz(void* inicio){
-    int soma_local=0;
-    pthread_mutex_lock(&mutex);
-    int *inicio_pt = (int*) inicio;
-    int ini = *inicio_pt;
-    pthread_mutex_unlock(&mutex);
-    int i;
-    //printf("\n-----Sub MAtriz ------\n");
-    for(i = ini;i<=(ini+n)-1;i++){
-        //printf("%d \t", matriz[i]);
-        if(EhPrimo(matriz[i])){
-            soma_local++;
-        }
-            
+void* SubMatriz(void* args){
 
-    }
-    //printf("\n");
+    int soma_local=0;
+    int i;
+    int j;
+    int divisores;
+    pthread_mutex_lock(&mutex);
+    int Bloco_Thread = Bloco++;
+    pthread_mutex_unlock(&mutex);
+    int Tam_Bloco = n;
     
+
+
+    for(i = Bloco_Thread*(Tamanho_Matriz/QThreads);i < ((Bloco_Thread+1) * (Tamanho_Matriz/QThreads));i++){
+        divisores=0;
+
+        printf("%d\n", matriz[i]);
+        if(EhPrimo(matriz[i]))
+            soma_local++;
+    }
     pthread_mutex_lock(&mutex);
     TotalPrimos+=soma_local;
     pthread_mutex_unlock(&mutex);
@@ -128,19 +111,18 @@ void* SubMatriz(void* inicio){
     pthread_exit(NULL);
 }
 
-int EhPrimo(int number){
-    int divisores=0;
-    int i;
-    for (i = 2; i < number; i++)
-    {
-        if(number%i == 0){
+//Função que verifica se é primo
+int EhPrimo(int numero){
+    int divisores = 0;
+    int j;
+    for (j = 2; j < numero; j++){
+        if(numero%j == 0){
             divisores++;
             break;
         }
-    }
-    if(divisores == 0 && number != 0 && number != 1)
+	}
+    if(divisores == 0 && numero != 0 && numero != 1)
         return TRUE;
     else
         return FALSE;
-    
 }
