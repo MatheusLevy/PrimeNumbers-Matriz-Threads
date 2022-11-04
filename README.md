@@ -16,7 +16,7 @@
 > You can rename the output file as you want using `gcc -o <filename> main_Pthreads.c -lpthread`.
 
 # The matrix
-The numbers of the matrix has a max limit set by `Biggest_Rand_Number`. The matrix need to be a square matrix, sou you can set the `n` and `m` as long n == m. The number of threads as set at `nThreads`, i recommend you set the number of cores of your processor.
+The numbers of the matrix has a max limit set by `Biggest_Rand_Number`. The matrix need to be a square matrix, so you can set the `n` and `m` as long n == m and need to have a size that is divisible by the number of threads (`(n*m) % nThreads == 0`). The number of threads as set at `nThreads`, i recommend you set the number of cores of your processor.
 
 # Functions
 * `CreatePthreads` as the name say create the threads and `JoinPthreads` join them on the processing pool.

@@ -6,8 +6,8 @@
 #define TRUE 1
 #define FALSE 0
 #define nThreads 4
-#define m 5
-#define n 5
+#define m 4
+#define n 4
 #define Biggest_Rand_Number 29999
 #define seed 58896532
 
@@ -79,12 +79,12 @@ void ShowMatrix(){
     printf("\n\n");
 }
 
-int endOfBlock(int block_number){
-    return (block_number+1) * block_size;
-}
-
 int startOfBlock(int block_number){
     return block_number * block_size;
+}
+
+int endOfBlock(int block_number){
+    return startOfBlock(block_number+1);
 }
 
 void* ProcessSubMatrix(void* args){
@@ -95,12 +95,10 @@ void* ProcessSubMatrix(void* args){
     int end_index = endOfBlock(Block_number);
     Block_number++;
     pthread_mutex_unlock(&mutex);
-    
     for(i = start_index; i < end_index; i++){
         if(isPrime(matrix[i]))
             local_primes_counter++;
     }
-
     pthread_mutex_lock(&mutex);
     PrimesCounter+=local_primes_counter;
     pthread_mutex_unlock(&mutex);
