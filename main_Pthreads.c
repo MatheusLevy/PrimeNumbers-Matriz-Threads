@@ -3,126 +3,125 @@
 #include <math.h>
 #include <pthread.h>
 
-//Macros
 #define TRUE 1
 #define FALSE 0
-//Quantidade de Threads
-#define QThreads 2
-//Matriz m x n
+#define nThreads 4
 #define m 5
 #define n 5
-//Maior numero aleatorio
-#define M_RAND 29999
-
-//Seed para geração aleatória
+#define Biggest_Rand_Number 29999
 #define seed 58896532
-//Definindo variaveis globais
-long long Tamanho_Matriz = n*m;
-int matriz[n*m];
-int TotalPrimos = 0;
-int Bloco=0;
-//Definindo Threads e Mutex
-pthread_t threads[QThreads];
+
+int matrix[n*m];
+int PrimesCounter = 0;
+int Block_number=0;
+int block_size = (n*m/nThreads);
+
+pthread_t threads[nThreads];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-//Definindo Funções
-void PreencherMatrizPadrao();
-void ExibirMatriz();
-void* SubMatriz(void *args);
-void ProcessarMatriz();
-int EhPrimo(int numero);
+void FillMatrix();
+void ShowMatrix();
+void* ProcessSubMatrix(void *args);
+void ProcessMatrix();
+int isPrime(int numero);
+void CreateThreads();
+void JoinThreads();
 
-//Uso de threads
+pthread_t threads[nThreads];
+
 int main(void){
-
-    PreencherMatrizPadrao(matriz);
-    ExibirMatriz(matriz);
-    ProcessarMatriz();
-    printf("\nExistem %d Primos", TotalPrimos);
+    FillMatrix(matrix);
+    ShowMatrix(matrix);
+    ProcessMatrix();
+    printf("\nThere are %d Prime Numbers\n", PrimesCounter);
     return 0;
 }
 
-
-void ProcessarMatriz(){
-
-    pthread_t threads_id[QThreads];
-
-    int k=0;
-    for(k=0;k<QThreads;k++)
-        pthread_create(&(threads_id[k]), NULL, SubMatriz, NULL);
-
-    for(k=0;k<QThreads;k++){
-        pthread_join(threads_id[k], NULL);
-    }
-
-    printf("\nQuantidade de Primos: %d\n", TotalPrimos);
+void CreatePthreads(){
+    int i;
+    for(i=0; i<nThreads; i++)
+        pthread_create(&threads[i], NULL, ProcessSubMatrix, NULL);
 }
 
-void PreencherMatrizPadrao(){
+void JoinPthreads(){
+    int i;
+    for(i=0; i<nThreads; i++)
+        pthread_join(threads[i], NULL);
+}
+
+void ProcessMatrix(){
+    int k=0;
+    CreatePthreads();
+    JoinPthreads();
+}
+
+int RandomNumber(){
+    return rand() % Biggest_Rand_Number;
+}
+void FillMatrix(){
     int i;
     int j;
     srand(seed);
-    for(i=0;i<m;i++){
-        for(j = 0; j<n;j++){
-            matriz[i*n+j] = rand() % M_RAND; 
-        }
+    for(i=0; i< m; i++){
+        for(j = 0; j<n; j++)
+            matrix[i*n + j] = RandomNumber();
     }
 }
 
-
-void ExibirMatriz(){
+void ShowMatrix(){
     int i;
     int j;
     for(i=0;i<m;i++){
-        for(j = 0; j<n;j++){
-            printf("%d \t", matriz[i*n+j]);
-        }
-        
+        for(j = 0; j<n;j++)
+            printf("%d \t", matrix[i*n + j]);
         printf("\n");
     }
     printf("\n\n");
 }
 
-//Função da Thread
-void* SubMatriz(void* args){
+int endOfBlock(int block_number){
+    return (block_number+1) * block_size;
+}
 
-    int soma_local=0;
+int startOfBlock(int block_number){
+    return block_number * block_size;
+}
+
+void* ProcessSubMatrix(void* args){
+    int local_primes_counter=0;
     int i;
-    int j;
-    int divisores;
     pthread_mutex_lock(&mutex);
-    int Bloco_Thread = Bloco++;
+    int start_index = startOfBlock(Block_number);
+    int end_index = endOfBlock(Block_number);
+    Block_number++;
     pthread_mutex_unlock(&mutex);
-    int Tam_Bloco = n;
     
-
-
-    for(i = Bloco_Thread*(Tamanho_Matriz/QThreads);i < ((Bloco_Thread+1) * (Tamanho_Matriz/QThreads));i++){
-        divisores=0;
-
-        printf("%d\n", matriz[i]);
-        if(EhPrimo(matriz[i]))
-            soma_local++;
+    for(i = start_index; i < end_index; i++){
+        if(isPrime(matrix[i]))
+            local_primes_counter++;
     }
+
     pthread_mutex_lock(&mutex);
-    TotalPrimos+=soma_local;
+    PrimesCounter+=local_primes_counter;
     pthread_mutex_unlock(&mutex);
-    
     pthread_exit(NULL);
 }
 
-//Função que verifica se é primo
-int EhPrimo(int numero){
-    int divisores = 0;
-    int j;
-    for (j = 2; j < numero; j++){
-        if(numero%j == 0){
-            divisores++;
-            break;
-        }
-	}
-    if(divisores == 0 && numero != 0 && numero != 1)
-        return TRUE;
-    else
+int isZero(int number){
+    return number == 0;
+}
+
+int isOne(int number){
+    return number == 1;
+}
+
+int isPrime(int number){
+    int i;
+    if (isZero(number) || isOne(number))
         return FALSE;
+    for (i = 2; i < number/2; i++){
+        if(number % i == 0)
+            return FALSE;
+	}
+	return TRUE;
 }
